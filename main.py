@@ -97,9 +97,10 @@ async def gemini_reply(prompt: str) -> str | None:
     if not api_key:
         return None
 
+    model = os.getenv("GEMINI_MODEL", "gemini-flash-latest")
     url = (
         "https://generativelanguage.googleapis.com/v1beta/models/"
-        f"gemini-1.5-flash-latest:generateContent?key={api_key}"
+        f"{model}:generateContent?key={api_key}"
     )
     payload = {
         "contents": [
@@ -196,9 +197,20 @@ async def translate_text(
 @app.post("/api/ai/suggest")
 async def suggest_reply(request: schemas.AISuggestionRequest):
     suggestion = await gemini_reply(request.last_message)
+    source = "gemini"
     if not suggestion:
         suggestion = rule_based_reply(request.last_message)
-    return {"suggestion": suggestion}
+        source = "rules"
+    return {"suggestion": suggestion, "source": source}
+
+
+@app.get("/api/ai/status")
+def ai_status():
+    return {
+        "gemini_configured": bool(os.getenv("GEMINI_API_KEY")),
+        "gemini_model": os.getenv("GEMINI_MODEL", "gemini-flash-latest"),
+        "fallback": "rules",
+    }
 
 
 @app.post("/api/upload-image")

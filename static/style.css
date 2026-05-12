@@ -450,12 +450,23 @@ select:focus {
     border-top: 1px solid var(--border);
     display: grid;
     gap: 10px;
-    grid-template-columns: minmax(160px, 240px) minmax(0, 1fr) auto;
+    grid-template-columns: minmax(160px, 240px) auto minmax(0, 1fr) auto;
     padding: 16px 22px;
 }
 
 .message-form input[type="file"] {
     padding: 10px;
+}
+
+.emoji-button {
+    align-items: center;
+    background: var(--panel-soft);
+    border: 1px solid var(--border);
+    color: var(--text);
+    display: inline-flex;
+    font-size: 1.1rem;
+    justify-content: center;
+    min-width: 46px;
 }
 
 @media (max-width: 860px) {

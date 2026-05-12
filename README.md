@@ -93,6 +93,7 @@ Do not commit API keys. Keep them in your local shell, `.env` manager, or Render
 
 - `GOOGLE_TRANSLATE_API_KEY`: required only for the translation feature.
 - `GEMINI_API_KEY`: optional. If missing, ChatLite uses safe rule-based AI suggestions and ChatBot replies.
+- `GEMINI_MODEL`: optional. Defaults to `gemini-flash-latest`.
 
 Local PowerShell example:
 
@@ -118,6 +119,7 @@ uvicorn main:app --reload
 - `DELETE /api/messages/{message_id}`
 - `GET /api/translate?text=&target=&source=auto`
 - `POST /api/ai/suggest`
+- `GET /api/ai/status`
 - `POST /api/upload-image`
 - `POST /api/typing`
 - `GET /api/typing/{user1_id}/{user2_id}?viewer_id=`

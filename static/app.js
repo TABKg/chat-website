@@ -28,6 +28,7 @@ const els = {
     chatWindow: document.querySelector("#chatWindow"),
     messageForm: document.querySelector("#messageForm"),
     imageInput: document.querySelector("#imageInput"),
+    emojiButton: document.querySelector("#emojiButton"),
     messageInput: document.querySelector("#messageInput"),
     themeToggle: document.querySelector("#themeToggle"),
 };
@@ -451,10 +452,21 @@ els.suggestReplyButton.addEventListener("click", async () => {
             }),
         });
         els.messageInput.value = data.suggestion;
-        showNotice("Suggested reply added.");
+        showNotice(`Suggested reply added using ${data.source === "gemini" ? "Gemini" : "rules"}.`);
     } catch (error) {
         showNotice(error.message, true);
     }
+});
+
+els.emojiButton.addEventListener("click", () => {
+    const emoji = "😊";
+    const start = els.messageInput.selectionStart ?? els.messageInput.value.length;
+    const end = els.messageInput.selectionEnd ?? els.messageInput.value.length;
+    els.messageInput.value = `${els.messageInput.value.slice(0, start)}${emoji}${els.messageInput.value.slice(end)}`;
+    els.messageInput.focus();
+    els.messageInput.setSelectionRange(start + emoji.length, start + emoji.length);
+    sendTypingState(true);
+    stopTypingSoon();
 });
 
 els.messageInput.addEventListener("input", () => {
