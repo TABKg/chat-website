@@ -21,7 +21,9 @@ class UserRead(BaseModel):
 class MessageCreate(BaseModel):
     sender_id: int
     receiver_id: int
-    content: str = Field(..., min_length=1)
+    content: str = ""
+    image_url: str | None = None
+    message_type: str = "text"
 
 
 class MessageUpdate(BaseModel):
@@ -35,8 +37,21 @@ class MessageRead(BaseModel):
     sender_id: int
     receiver_id: int
     content: str
+    image_url: str | None
+    message_type: str
     created_at: datetime
     edited_at: datetime | None
     is_deleted: bool
     sender: UserRead
     receiver: UserRead
+
+
+class AISuggestionRequest(BaseModel):
+    conversation: list[MessageRead] = []
+    last_message: str = ""
+
+
+class TypingUpdate(BaseModel):
+    sender_id: int
+    receiver_id: int
+    is_typing: bool

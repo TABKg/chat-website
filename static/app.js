@@ -4,6 +4,9 @@ const state = {
     selectedUserId: "",
     conversation: [],
     pollTimer: null,
+    typingPollTimer: null,
+    typingStopTimer: null,
+    translatedMessages: {},
 };
 
 const els = {
@@ -19,8 +22,12 @@ const els = {
     notice: document.querySelector("#notice"),
     messageSearchInput: document.querySelector("#messageSearchInput"),
     clearMessageSearch: document.querySelector("#clearMessageSearch"),
+    languageSelect: document.querySelector("#languageSelect"),
+    suggestReplyButton: document.querySelector("#suggestReplyButton"),
+    typingIndicator: document.querySelector("#typingIndicator"),
     chatWindow: document.querySelector("#chatWindow"),
     messageForm: document.querySelector("#messageForm"),
+    imageInput: document.querySelector("#imageInput"),
     messageInput: document.querySelector("#messageInput"),
     themeToggle: document.querySelector("#themeToggle"),
 };
@@ -53,7 +60,7 @@ function showNotice(message, isError = false) {
     els.notice.textContent = message;
     els.notice.classList.toggle("error", isError);
     els.notice.hidden = false;
-    window.clearTimeout(els.notice.dataset.timeoutId);
+    window.clearTimeout(Number(els.notice.dataset.timeoutId));
     els.notice.dataset.timeoutId = window.setTimeout(() => {
         els.notice.hidden = true;
     }, 3500);
@@ -151,6 +158,19 @@ function renderChatHeader() {
     els.partnerAvatar.textContent = initials(partner.display_name);
 }
 
+function messageBody(message) {
+    const image = message.image_url
+        ? `<img class="message-image" src="${escapeHtml(message.image_url)}" alt="Uploaded chat image">`
+        : "";
+    const text = message.content
+        ? `<p class="message-text">${escapeHtml(message.content)}</p>`
+        : "";
+    const translated = state.translatedMessages[message.id]
+        ? `<p class="translated-text">${escapeHtml(state.translatedMessages[message.id])}</p>`
+        : "";
+    return `${image}${text}${translated}`;
+}
+
 function renderMessages(messages = state.conversation) {
     els.chatWindow.innerHTML = "";
 
@@ -180,17 +200,18 @@ function renderMessages(messages = state.conversation) {
         row.className = `message-row ${mine ? "mine" : "theirs"}`;
         row.innerHTML = `
             <div class="message-bubble">
-                <p class="message-text">${escapeHtml(message.content)}</p>
+                ${messageBody(message)}
                 <div class="message-info">
                     <span>${formatTime(message.created_at)}</span>
                     ${message.edited_at ? "<span>edited</span>" : ""}
                 </div>
-                ${mine ? `
-                    <div class="message-actions">
+                <div class="message-actions">
+                    ${message.content ? `<button type="button" data-action="translate" data-id="${message.id}">Translate</button>` : ""}
+                    ${mine ? `
                         <button type="button" data-action="edit" data-id="${message.id}">Edit</button>
                         <button type="button" class="delete-button" data-action="delete" data-id="${message.id}">Delete</button>
-                    </div>
-                ` : ""}
+                    ` : ""}
+                </div>
             </div>
         `;
         els.chatWindow.appendChild(row);
@@ -224,6 +245,7 @@ async function loadConversation(showErrors = true) {
         state.conversation = [];
         renderChatHeader();
         renderMessages();
+        updateTypingIndicator(false);
         return;
     }
 
@@ -242,8 +264,11 @@ function selectPartner(userId) {
         return;
     }
     state.selectedUserId = String(userId);
+    state.translatedMessages = {};
+    els.messageSearchInput.value = "";
     renderUsers();
     loadConversation();
+    pollTypingState();
 }
 
 function startPolling() {
@@ -253,6 +278,9 @@ function startPolling() {
             loadConversation(false);
         }
     }, 2000);
+
+    if (state.typingPollTimer) window.clearInterval(state.typingPollTimer);
+    state.typingPollTimer = window.setInterval(pollTypingState, 1000);
 }
 
 async function searchUsers() {
@@ -292,6 +320,76 @@ async function searchMessages() {
     }
 }
 
+async function uploadSelectedImage() {
+    const file = els.imageInput.files[0];
+    if (!file) return null;
+    if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) {
+        throw new Error("Only JPG, PNG, WebP, or GIF images are allowed.");
+    }
+    if (file.size > 5 * 1024 * 1024) {
+        throw new Error("Image must be 5 MB or smaller.");
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await fetch("/api/upload-image", {
+        method: "POST",
+        body: formData,
+    });
+    const data = await response.json();
+    if (!response.ok) {
+        throw new Error(data?.detail || "Image upload failed.");
+    }
+    return data.image_url;
+}
+
+async function sendTypingState(isTyping) {
+    if (!state.currentUserId || !state.selectedUserId) return;
+    try {
+        await api("/api/typing", {
+            method: "POST",
+            body: JSON.stringify({
+                sender_id: Number(state.currentUserId),
+                receiver_id: Number(state.selectedUserId),
+                is_typing: isTyping,
+            }),
+        });
+    } catch {
+        // Typing status is optional UI polish; keep chat usable if it fails.
+    }
+}
+
+function updateTypingIndicator(isTyping) {
+    const partner = selectedUser();
+    if (isTyping && partner) {
+        els.typingIndicator.textContent = `${partner.display_name} is typing...`;
+        els.typingIndicator.hidden = false;
+    } else {
+        els.typingIndicator.hidden = true;
+        els.typingIndicator.textContent = "";
+    }
+}
+
+async function pollTypingState() {
+    if (!state.currentUserId || !state.selectedUserId) {
+        updateTypingIndicator(false);
+        return;
+    }
+    try {
+        const data = await api(
+            `/api/typing/${state.currentUserId}/${state.selectedUserId}?viewer_id=${state.currentUserId}`,
+        );
+        updateTypingIndicator(data.is_typing);
+    } catch {
+        updateTypingIndicator(false);
+    }
+}
+
+async function stopTypingSoon() {
+    window.clearTimeout(state.typingStopTimer);
+    state.typingStopTimer = window.setTimeout(() => sendTypingState(false), 1500);
+}
+
 els.createUserForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     try {
@@ -315,6 +413,7 @@ els.currentUserSelect.addEventListener("change", () => {
     if (String(state.selectedUserId) === String(state.currentUserId)) {
         state.selectedUserId = "";
     }
+    state.translatedMessages = {};
     els.messageSearchInput.value = "";
     renderUsers();
     loadConversation();
@@ -329,28 +428,68 @@ els.clearMessageSearch.addEventListener("click", () => {
     renderMessages();
 });
 
-els.messageForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const content = els.messageInput.value.trim();
+els.suggestReplyButton.addEventListener("click", async () => {
     if (!state.currentUserId || !state.selectedUserId) {
-        showNotice("Select yourself and a chat partner first.", true);
+        showNotice("Select a conversation before asking for a suggestion.", true);
         return;
     }
-    if (!content) {
-        showNotice("Type a message before sending.", true);
+
+    const latestReceived = [...state.conversation]
+        .reverse()
+        .find((message) => String(message.sender_id) === String(state.selectedUserId) && message.content);
+    if (!latestReceived) {
+        showNotice("No received text message to suggest a reply for.", true);
         return;
     }
 
     try {
+        const data = await api("/api/ai/suggest", {
+            method: "POST",
+            body: JSON.stringify({
+                conversation: state.conversation,
+                last_message: latestReceived.content,
+            }),
+        });
+        els.messageInput.value = data.suggestion;
+        showNotice("Suggested reply added.");
+    } catch (error) {
+        showNotice(error.message, true);
+    }
+});
+
+els.messageInput.addEventListener("input", () => {
+    sendTypingState(true);
+    stopTypingSoon();
+});
+
+els.messageForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const content = els.messageInput.value.trim();
+    const hasImage = Boolean(els.imageInput.files[0]);
+    if (!state.currentUserId || !state.selectedUserId) {
+        showNotice("Select yourself and a chat partner first.", true);
+        return;
+    }
+    if (!content && !hasImage) {
+        showNotice("Type a message or choose an image before sending.", true);
+        return;
+    }
+
+    try {
+        const imageUrl = await uploadSelectedImage();
         await api("/api/messages", {
             method: "POST",
             body: JSON.stringify({
                 sender_id: Number(state.currentUserId),
                 receiver_id: Number(state.selectedUserId),
                 content,
+                image_url: imageUrl,
+                message_type: imageUrl ? "image" : "text",
             }),
         });
+        await sendTypingState(false);
         els.messageInput.value = "";
+        els.imageInput.value = "";
         els.messageSearchInput.value = "";
         await loadConversation();
     } catch (error) {
@@ -366,6 +505,21 @@ els.chatWindow.addEventListener("click", async (event) => {
     const action = button.dataset.action;
 
     try {
+        if (action === "translate") {
+            const current = state.conversation.find((message) => String(message.id) === String(id));
+            if (!current?.content) {
+                showNotice("Only text messages can be translated.", true);
+                return;
+            }
+            const target = els.languageSelect.value;
+            const data = await api(
+                `/api/translate?text=${encodeURIComponent(current.content)}&target=${encodeURIComponent(target)}&source=auto`,
+            );
+            state.translatedMessages[id] = data.translated_text;
+            renderMessages();
+            showNotice("Message translated.");
+        }
+
         if (action === "edit") {
             const current = state.conversation.find((message) => String(message.id) === String(id));
             const content = window.prompt("Edit message:", current?.content || "");

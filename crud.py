@@ -61,6 +61,8 @@ def create_message(db: Session, message: schemas.MessageCreate):
         sender_id=message.sender_id,
         receiver_id=message.receiver_id,
         content=clean_text(message.content),
+        image_url=message.image_url,
+        message_type=message.message_type,
     )
     db.add(db_message)
     db.commit()

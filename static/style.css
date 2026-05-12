@@ -245,7 +245,7 @@ select:focus {
 
 .chat-panel {
     display: grid;
-    grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+    grid-template-rows: auto auto auto auto minmax(0, 1fr) auto;
     min-width: 0;
     overflow: hidden;
 }
@@ -299,6 +299,39 @@ select:focus {
     background: var(--panel-soft);
     border: 1px solid var(--border);
     color: var(--text);
+}
+
+.tools-row {
+    align-items: end;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    gap: 10px;
+    grid-template-columns: minmax(140px, 200px) auto minmax(160px, 1fr);
+    padding: 12px 22px;
+}
+
+.tools-row label {
+    color: var(--muted);
+    display: flex;
+    flex-direction: column;
+    font-size: 0.78rem;
+    font-weight: 800;
+    gap: 5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.tools-row button {
+    background: var(--panel-soft);
+    border: 1px solid var(--border);
+    color: var(--text);
+}
+
+.typing-indicator {
+    align-self: center;
+    color: var(--muted);
+    font-size: 0.9rem;
+    font-style: italic;
 }
 
 .chat-window {
@@ -364,6 +397,27 @@ select:focus {
     word-break: break-word;
 }
 
+.message-image {
+    border-radius: 13px;
+    display: block;
+    margin-bottom: 8px;
+    max-height: 260px;
+    max-width: min(320px, 100%);
+    object-fit: cover;
+}
+
+.translated-text {
+    border-top: 1px solid rgba(255, 255, 255, 0.22);
+    font-size: 0.92rem;
+    margin: 8px 0 0;
+    opacity: 0.9;
+    padding-top: 8px;
+}
+
+.theirs .translated-text {
+    border-color: var(--border);
+}
+
 .message-info {
     align-items: center;
     display: flex;
@@ -396,8 +450,12 @@ select:focus {
     border-top: 1px solid var(--border);
     display: grid;
     gap: 10px;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(160px, 240px) minmax(0, 1fr) auto;
     padding: 16px 22px;
+}
+
+.message-form input[type="file"] {
+    padding: 10px;
 }
 
 @media (max-width: 860px) {
@@ -418,6 +476,7 @@ select:focus {
 @media (max-width: 540px) {
     .chat-header,
     .search-row,
+    .tools-row,
     .message-form {
         padding-left: 14px;
         padding-right: 14px;
@@ -428,7 +487,8 @@ select:focus {
     }
 
     .message-form,
-    .search-row {
+    .search-row,
+    .tools-row {
         grid-template-columns: 1fr;
     }
 }
