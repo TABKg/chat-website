@@ -118,7 +118,7 @@ Note: This demo uses SQLite for simplicity. Render free deployment may reset SQL
 
 ## Live Website
 
-Live website link: `PASTE_RENDER_LINK_HERE`
+Live website link: `https://chat-website-82v8.onrender.com/`
 
 ## Demo Video
 
