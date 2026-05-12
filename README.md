@@ -171,7 +171,7 @@ Live website link: `https://chat-website-82v8.onrender.com/`
 
 ## Demo Video
 
-YouTube demo video link: `PASTE_YOUTUBE_LINK_HERE`
+YouTube demo video link: `https://youtu.be/7ZrideODt8k`
 
 ## Screenshots
 
