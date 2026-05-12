@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatLite</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <div class="brand-row">
+                <div>
+                    <h1>ChatLite</h1>
+                    <p>FastAPI chat demo</p>
+                </div>
+                <button id="themeToggle" class="icon-button" type="button" aria-label="Toggle dark mode">🌙</button>
+            </div>
+
+            <section class="card">
+                <h2>Create User</h2>
+                <form id="createUserForm">
+                    <input id="usernameInput" type="text" placeholder="username" autocomplete="off" required>
+                    <input id="displayNameInput" type="text" placeholder="Display name" autocomplete="off" required>
+                    <button type="submit">Create user</button>
+                </form>
+            </section>
+
+            <section class="card">
+                <h2>Current User</h2>
+                <select id="currentUserSelect">
+                    <option value="">Select yourself</option>
+                </select>
+            </section>
+
+            <section class="card users-card">
+                <h2>Users</h2>
+                <input id="userSearchInput" type="search" placeholder="Search users">
+                <div id="userList" class="user-list" aria-live="polite"></div>
+            </section>
+        </aside>
+
+        <main class="chat-panel">
+            <header class="chat-header">
+                <div id="partnerAvatar" class="avatar large">CL</div>
+                <div>
+                    <p class="eyebrow">Conversation</p>
+                    <h2 id="chatPartnerName">Select a chat partner</h2>
+                    <p id="chatPartnerStatus" class="status-text">Choose a current user and someone to chat with.</p>
+                </div>
+            </header>
+
+            <div id="notice" class="notice" hidden></div>
+
+            <div class="search-row">
+                <input id="messageSearchInput" type="search" placeholder="Search messages in this chat">
+                <button id="clearMessageSearch" type="button">Clear</button>
+            </div>
+
+            <section id="chatWindow" class="chat-window" aria-live="polite">
+                <div class="empty-state">
+                    <h3>Welcome to ChatLite</h3>
+                    <p>Create two users, select yourself, then choose a chat partner to start messaging.</p>
+                </div>
+            </section>
+
+            <form id="messageForm" class="message-form">
+                <input id="messageInput" type="text" placeholder="Type a message, emoji supported 😊" autocomplete="off">
+                <button type="submit">Send</button>
+            </form>
+        </main>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
