@@ -175,9 +175,20 @@ YouTube demo video link: `PASTE_YOUTUBE_LINK_HERE`
 
 ## Screenshots
 
-Add screenshots here:
+### Home Screen
+![Home screen](screenshots/home.png)
 
-- Home/chat screen
-- User creation and search
-- Message edit/delete
-- FastAPI docs
+### Chat Screens
+![Chat screen 1](screenshots/chat1.png)
+![Chat screen 2](screenshots/chat2.png)
+
+### Edit Message
+![Edit message 1](screenshots/edit1.png)
+![Edit message 2](screenshots/edit2.png)
+
+### Delete Message
+![Delete message 1](screenshots/delete1.png)
+![Delete message 2](screenshots/delete2.png)
+
+### FastAPI Docs
+![FastAPI docs](screenshots/docs.png)
